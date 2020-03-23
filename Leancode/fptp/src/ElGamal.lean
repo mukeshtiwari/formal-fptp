@@ -1,6 +1,7 @@
 import data.zmod.basic data.nat.prime 
   data.zmod.quadratic_reciprocity
   tactic.find tactic.omega data.vector
+  list_lemma
 
 namespace ElGamal 
 /- 
@@ -53,16 +54,60 @@ def elgamal_reenc (c : zmodp p Hp ×  zmodp p Hp)
   (r : zmodp q Hq) :=  
   (c.1 * g^r.val, c.2 * pubkey^r.val)
 
-def ciphertext_mult (c : zmodp p Hp ×  zmodp p Hp)
+def ciphertext_mult (c : zmodp p Hp × zmodp p Hp)
      (d : zmodp p Hp ×  zmodp p Hp) := 
      (c.1 * d.1, c.2 * d.2)
 
 
+
 def vector_elegamal_enc {n : ℕ} :  
   vector (zmodp p Hp) n -> vector (zmodp q Hq) n -> 
-  vector (zmodp p Hp) n  := ([], _) 
+  vector (zmodp p Hp × zmodp p Hp) n  
+  | ⟨ms, Hm⟩  ⟨rs, Hr⟩ := 
+    ⟨list.zip_with (elgamal_enc p q Hp Hq g pubkey) ms rs, 
+    begin
+      have Ht : list.length ms = list.length rs :=  
+      begin rw [Hm, Hr] end,
+      rw <- Hm, apply zip_with_len_l, exact Ht
+    end ⟩
 
-  
+def vector_elegamal_dec {n : ℕ} :  
+  vector (zmodp p Hp × zmodp p Hp) n -> 
+  vector (zmodp p Hp) n  
+  | ⟨cs, Hc⟩  := 
+    ⟨list.map (elgamal_dec p q Hp Hq prikey) cs, 
+    begin 
+      rw <- Hc, apply map_with_len_l, 
+    end ⟩
+
+def vector_elegamal_reenc {n : ℕ} :  
+  vector (zmodp p Hp × zmodp p Hp) n -> vector (zmodp q Hq) n -> 
+  vector (zmodp p Hp × zmodp p Hp) n  
+  | ⟨cs, Hc⟩  ⟨rs, Hr⟩ := 
+    ⟨list.zip_with (elgamal_reenc p q Hp Hq g pubkey) cs rs, 
+    begin 
+      have Ht : list.length cs = list.length rs :=  
+      begin rw [Hc, Hr] end,
+      rw <- Hc, apply zip_with_len_l, exact Ht
+    end ⟩
+
+
+def vector_ciphertext_mult {n : ℕ} :  
+  vector (zmodp p Hp × zmodp p Hp) n -> vector (zmodp p Hp × zmodp p Hp) n -> 
+  vector (zmodp p Hp × zmodp p Hp) n  
+  | ⟨cs₁, Hc₁⟩  ⟨cs₂, Hc₂⟩ := 
+    ⟨list.zip_with (ciphertext_mult p Hp) cs₁  cs₂, 
+    begin 
+      have Ht : list.length cs₁ = list.length cs₂ :=  
+      begin rw [Hc₁, Hc₂] end,
+      rw <- Hc₁, apply zip_with_len_l, exact Ht
+    end ⟩
+
+
+      
+      
+
+
  
 include Hrel Hg Hh₁ 
 theorem elgama_enc_dec_identity :  

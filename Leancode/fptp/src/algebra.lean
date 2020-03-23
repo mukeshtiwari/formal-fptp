@@ -61,9 +61,43 @@ class vector_space {F V : Type*} (Fzero Fone : F)
     (Hfoneid : forall v, Vop Fone v = v)
     (Hfzerid : forall v, Vop Fzero v = Vone)
 
-    
-
-
-
 
 end AlgStructures
+
+namespace Elgamal
+open AlgStructures
+
+
+def flip {A B : Type*} (f : A → B → B) := 
+ λ (y : B) (x : A), f x y
+
+ section
+ variables 
+   {F : Type*} 
+   {G : Type*}
+   (Fzero Fone : F)
+   (Fadd Fsub Fmult Fdiv : F → F → F) 
+   (Fopp Finv : F → F)
+   (Gone : G) 
+   (Gdot : G → G → G) 
+   (Ginv : G → G) 
+   (Gop : F → G → G)
+   [Hfdec : decidable_eq F]
+   [Hgdec : decidable_eq G]
+   (g : G) /- generator -/
+   (x : F) /- private key -/
+   (h : G) /- publick key -/
+   (Hp : h = flip Gop h x) /- g = h^x -/
+   
+/- When suppling Gdot, compute g^m -/
+def elgamal_enc (m : G) (r : F) := 
+  (flip Gop g r, Gdot m (flip Gop h r))
+
+
+
+ 
+   
+
+section
+
+end Elgamal
