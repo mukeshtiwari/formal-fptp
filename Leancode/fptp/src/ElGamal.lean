@@ -1,6 +1,6 @@
 import data.zmod.basic data.nat.prime 
   data.zmod.quadratic_reciprocity
-  tactic.find tactic.omega
+  tactic.find tactic.omega data.vector
 
 namespace ElGamal 
 /- 
@@ -58,6 +58,12 @@ def ciphertext_mult (c : zmodp p Hp ×  zmodp p Hp)
      (c.1 * d.1, c.2 * d.2)
 
 
+def vector_elegamal_enc {n : ℕ} :  
+  vector (zmodp p Hp) n -> vector (zmodp q Hq) n -> 
+  vector (zmodp p Hp) n  := ([], _) 
+
+  
+ 
 include Hrel Hg Hh₁ 
 theorem elgama_enc_dec_identity :  
 ∀ m r', elgamal_dec p q Hp Hq prikey 
@@ -78,8 +84,8 @@ end
 theorem additive_homomorphic_property : forall c d m₁ m₂ r₁ r₂,
  c = elgamal_enc p q Hp Hq g pubkey m₁ r₁ ->
  d = elgamal_enc p q Hp Hq g pubkey m₂ r₂ -> 
- (g^(r₁.val + r₂.val), g^(m₁.val + m₂.val) * pubkey^(r₁.val + r₂.val)) = 
- ciphertext_mult p Hp c d := 
+ (g^(r₁.val + r₂.val), g^(m₁.val + m₂.val) * 
+ pubkey^(r₁.val + r₂.val)) = ciphertext_mult p Hp c d := 
 begin 
   unfold elgamal_enc ciphertext_mult, 
   intros c d m₁ m₂ r₁ r₂ Hc Hd, simp,

@@ -19,27 +19,49 @@ class abelian_group {A : Type*} (e : A) (f : A → A → A)
  (Hg : @group A e f inv Hdec)
  (Hcomm : ∀ x y : A, f x y = f y x)
 
-
+/- assuming a ring with identity -/
 class ring {A : Type*} (zero one : A) 
  (Radd Rsub Rmult : A → A → A) (Ropp : A → A) 
  [Hdec : decidable_eq A] := 
  (Habel : @abelian_group A zero Radd Ropp Hdec)
  (Hmon : @monoid A one Rmult Hdec)
- (Ring_distr_l : forall x y z, Rmult (Radd x y) z = Radd (Rmult x z) (Rmult y z))
- (Ring_distr_r : forall x y z, Rmult z (Radd x y) = Radd (Rmult z x) (Rmult z y))
+ (Ring_distr_l : forall x y z, Rmult (Radd x y) z = 
+    Radd (Rmult x z) (Rmult y z))
+ (Ring_distr_r : forall x y z, Rmult z (Radd x y) = 
+    Radd (Rmult z x) (Rmult z y))
  (Ring_sub_def : forall x y, Rsub x y = Radd x (Ropp y))
+
+
+class commutative_ring {A : Type*} (zero one : A) 
+ (Radd Rsub Rmult : A → A → A) (Ropp : A → A) 
+ [Hdec : decidable_eq A] :=
+ (Hring : @ring A zero one Radd Rsub Rmult Ropp Hdec)
+ (Hinv : forall x y : A, Rmult x y = Rmult y x)
 
 
 class field {A : Type*} (zero one : A) 
  (Fadd Fsub Fmult Fdiv : A → A → A) (Fopp Finv : A → A) 
  [Hdec : decidable_eq A] :=
- (Hnz : zero ≠ one)
- (Haddabel : @abelian_group A zero Fadd Fopp Hdec)
- (Hmulabel : @abelian_group A one Fmult Finv Hdec)
- (Field_sub_def : forall x y, Fsub x y = Fadd x (Fopp y))
- (Field_div_def : forall x y, Fdiv x y = Fmult x (Finv y))
- (Field_distr : forall x y z, Fmult x (Fadd y z) = Fadd (Fmult x y) (Fmult x z))
+ (Hcring : @commutative_ring A zero one Fadd Fsub Fmult 
+                Fopp Hdec)
+ (Hfinvl : forall x : A, x ≠ zero -> Fmult (Finv x) x = one)
+ (Hfinvr : forall x : A, x ≠ zero -> Fmult x (Finv x) = one)
+ (Hzinv : Finv zero = zero)
 
+
+class vector_space {F V : Type*} (Fzero Fone : F)
+    (Fadd Fsub Fmult Fdiv : F → F → F) (Fopp Finv : F → F)
+    (Vone : V) (Vdot : V → V → V) (Vinv : V → V) (Vop : F → V → V)
+    [Hfdec : decidable_eq F] [Hgdec : decidable_eq V] :=
+    (Hfield : @field F Fzero Fone Fadd Fsub Fmult Fdiv Fopp Finv Hfdec)
+    (Hgroup : @abelian_group V Vone Vdot Vinv Hgdec)
+    (Hcomp  : forall (x y : F) (v : V), Vop x (Vop y v) = Vop (Fmult x y) v)
+    (Hdistr_fv : forall x v₁ v₂, Vop x (Vdot v₁ v₂) = Vdot (Vop x v₁) (Vop x v₂))
+    (Hdistr_vf : forall x y v, Vop (Fadd x y) v = Vdot (Vop x v) (Vop y v))
+    (Hfoneid : forall v, Vop Fone v = v)
+    (Hfzerid : forall v, Vop Fzero v = Vone)
+
+    
 
 
 
