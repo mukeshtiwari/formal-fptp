@@ -59,7 +59,6 @@ def ciphertext_mult (c : zmodp p Hp × zmodp p Hp)
      (c.1 * d.1, c.2 * d.2)
 
 
-
 def vector_elegamal_enc {n : ℕ} :  
   vector (zmodp p Hp) n -> vector (zmodp q Hq) n -> 
   vector (zmodp p Hp × zmodp p Hp) n  
@@ -95,20 +94,32 @@ def vector_elegamal_reenc {n : ℕ} :
 def vector_ciphertext_mult {n : ℕ} :  
   vector (zmodp p Hp × zmodp p Hp) n -> vector (zmodp p Hp × zmodp p Hp) n -> 
   vector (zmodp p Hp × zmodp p Hp) n  
-  | ⟨cs₁, Hc₁⟩  ⟨cs₂, Hc₂⟩ := 
+  | ⟨cs₁ , Hc₁⟩  ⟨cs₂, Hc₂⟩ := 
     ⟨list.zip_with (ciphertext_mult p Hp) cs₁  cs₂, 
     begin 
       have Ht : list.length cs₁ = list.length cs₂ :=  
       begin rw [Hc₁, Hc₂] end,
-      rw <- Hc₁, apply zip_with_len_l, exact Ht
+      rw <- Hc₁, apply zip_with_len_l, exact Ht,
     end ⟩
 
+/-
+inductive count 
 
+1. a ballot encrypted with [g^0, g^0, ....]
+2. a ballot is valid add it to the running margin
+3. invalid, discard it and permute it by 
+    a secret permutation 
+4. when no more ballot left, then honest decryption
+
+Zero-Knowledge-Proof framework
+
+Wikstrom Shuffle proof
+Extend it to the Coq as well, plug these 
+proofs in Coq. 
+
+-/
       
-      
 
-
- 
 include Hrel Hg Hh₁ 
 theorem elgama_enc_dec_identity :  
 ∀ m r', elgamal_dec p q Hp Hq prikey 
@@ -139,10 +150,10 @@ begin
     rw [Hc, Hd], simp, exact pow_add g r₁.val r₂.val
   end,
   have Ht₂ : g ^ (m₁.val + m₂.val) * pubkey ^ (r₁.val + r₂.val) = 
-      c.snd * d.snd := 
-  begin
-    rw [Hc, Hd, pow_add, pow_add], simp, ring
-  end,
+      c.snd * d.snd :=  begin
+        rw [Hc, Hd, pow_add, 
+        pow_add], simp, ring
+        end,
   exact and.intro Ht₁ Ht₂
 end
 
@@ -151,8 +162,6 @@ end
 
 
 
-
-
-
 end ElGamal
 
+#check ElGamal.elgamal_enc 
