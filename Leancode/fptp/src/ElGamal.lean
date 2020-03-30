@@ -101,6 +101,8 @@ def vector_ciphertext_mult {n : ℕ} :
       begin rw [Hc₁, Hc₂] end,
       rw <- Hc₁, apply zip_with_len_l, exact Ht,
     end ⟩
+  
+#print vector_ciphertext_mult._main 
 
 /-
 inductive count 

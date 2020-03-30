@@ -87,13 +87,17 @@ def flip {A B : Type*} (f : A → B → B) :=
    (g : G) /- generator -/
    (x : F) /- private key -/
    (h : G) /- publick key -/
-   (Hp : h = flip Gop h x) /- g = h^x -/
+   (Hp : h = Gop x h) /- g = h^x -/
    
-/- When suppling Gdot, compute g^m -/
-def elgamal_enc (m : G) (r : F) := 
-  (flip Gop g r, Gdot m (flip Gop h r))
+/- When suppling Gdot, map m => g^m -/
+def elgamal_enc (r : F) (m : G)  := 
+  (Gop r g, Gdot m (Gop r h))
 
-
+def elgamal_dec (c : G × G) : G := 
+ Gdot c.2 (Ginv (Gop x c.1))
+ 
+/- use notation -/  
+def elgamal_reenc (r : F) (c : G × G) : G :=
 
  
    
