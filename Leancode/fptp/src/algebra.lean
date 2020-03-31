@@ -93,7 +93,7 @@ variables
    (g : G) /- generator -/
    (x : F) /- private key -/
    (h : G) /- publick key -/
-   (Hp : h = Gop x h) /- g = h^x -/
+   (Hp : h = Gop x g) /- g = h^x -/
    
 
 
@@ -106,12 +106,20 @@ def elgamal_dec (c : G × G) : G :=
  Gdot c.2 (Ginv (Gop x c.1))
 
 
-include Hvec
-theorem correct_decryption : ∀ (r : F) (m : G),
+include Hvec Hp
+theorem decryption_correct (r : F) (m : G) :
   elgamal_dec Gdot Ginv Gop x 
     (elgamal_enc Gdot Gop g h r m) = m :=
 begin
-  sorry 
+  unfold elgamal_enc elgamal_dec, rw Hp,
+  simp, destruct Hvec, intros, clear a, 
+  repeat {rw Hcomp}, destruct Hgroup, 
+  destruct Hfield, intros, clear a_1, 
+  destruct Hcring, intros, clear a a_1, 
+  rw Hinv, destruct Hring, intros, clear a, 
+  destruct Hg, intros, clear a, destruct Hmon_1,
+  intros, clear a, rw <- Hassoc, rw Hinvr,
+  rw Hidr
 end
  
    
