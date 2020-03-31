@@ -1,6 +1,7 @@
 
 namespace AlgStructures
 
+
 class monoid {A : Type*} (e : A) (f : A → A → A) [decidable_eq A]:=
  (Hassoc : ∀ a b c : A, f a (f b c) = f (f a b) c)
  (Hidl : ∀ a : A, f e a = a)
@@ -49,7 +50,7 @@ class field {A : Type*} (zero one : A)
  (Hzinv : Finv zero = zero)
 
 
-class vector_space {F V : Type*} (Fzero Fone : F)
+class vector_space {F : Type*} {V : Type*} (Fzero Fone : F)
     (Fadd Fsub Fmult Fdiv : F → F → F) (Fopp Finv : F → F)
     (Vone : V) (Vdot : V → V → V) (Vinv : V → V) (Vop : F → V → V)
     [Hfdec : decidable_eq F] [Hgdec : decidable_eq V] :=
@@ -68,9 +69,6 @@ namespace Elgamal
 open AlgStructures
 
 
-def flip {A B : Type*} (f : A → B → B) := 
- λ (y : B) (x : A), f x y
-
  section
  variables 
    {F : Type*} 
@@ -84,24 +82,39 @@ def flip {A B : Type*} (f : A → B → B) :=
    (Gop : F → G → G)
    [Hfdec : decidable_eq F]
    [Hgdec : decidable_eq G]
+   [Hvec : @vector_space F G
+           Fzero Fone Fadd 
+           Fsub Fmult Fdiv
+           Fopp Finv Gone 
+           Gdot Ginv Gop 
+           Hfdec Hgdec]
+
+variables
    (g : G) /- generator -/
    (x : F) /- private key -/
    (h : G) /- publick key -/
    (Hp : h = Gop x h) /- g = h^x -/
    
+
+
 /- When suppling Gdot, map m => g^m -/
 def elgamal_enc (r : F) (m : G)  := 
   (Gop r g, Gdot m (Gop r h))
 
+
 def elgamal_dec (c : G × G) : G := 
  Gdot c.2 (Ginv (Gop x c.1))
- 
-/- use notation -/  
-def elgamal_reenc (r : F) (c : G × G) : G :=
 
+
+include Hvec
+theorem correct_decryption : ∀ (r : F) (m : G),
+  elgamal_dec Gdot Ginv Gop x 
+    (elgamal_enc Gdot Gop g h r m) = m :=
+begin
+  sorry 
+end
  
    
 
-section
-
+end 
 end Elgamal
