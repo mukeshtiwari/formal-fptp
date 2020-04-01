@@ -1,8 +1,13 @@
+import 
+  tactic.find tactic.omega 
+  data.vector list_lemma
+
+
 
 namespace AlgStructures
 
 
-class monoid {A : Type*} (e : A) (f : A → A → A) [decidable_eq A]:=
+class monoid {A : Type*} (e : A) (f : A → A → A) [decidable_eq A] :=
  (Hassoc : ∀ a b c : A, f a (f b c) = f (f a b) c)
  (Hidl : ∀ a : A, f e a = a)
  (Hidr : ∀ a : A, f a e = a)
@@ -98,7 +103,7 @@ variables
 
 
 /- When suppling Gdot, map m => g^m -/
-def elgamal_enc (r : F) (m : G)  := 
+def elgamal_enc (r : F) (m : G) := 
   (Gop r g, Gdot m (Gop r h))
 
 
@@ -106,21 +111,104 @@ def elgamal_dec (c : G × G) : G :=
  Gdot c.2 (Ginv (Gop x c.1))
 
 
+def elgamal_reenc (r : F) (c : G × G) :=  
+  (Gdot c.1 (Gop r g), Gdot c.2 (Gop r h))
+
+
+def ciphertext_mult (c d : G × G) := 
+     (Gdot c.1 d.1, Gdot c.2 d.2)
+
+
+def vector_elegamal_enc {n : ℕ} :  
+  vector F n -> vector G n ->  
+  vector (G × G) n  
+  | ⟨rs, Hr⟩ ⟨ms, Hm⟩ := 
+    ⟨list.zip_with (elgamal_enc Gdot Gop g h) rs ms, 
+    begin
+      have Ht : list.length rs = list.length ms :=  
+      begin rw [Hm, Hr] end, rw <- Hr, 
+      apply zip_with_len_l, exact Ht
+    end⟩
+
+
+def vector_elegamal_dec {n : ℕ} :  
+  vector (G × G) n -> vector G n  
+  | ⟨cs, Hc⟩  := 
+    ⟨list.map (elgamal_dec Gdot Ginv Gop x) cs, 
+      by rw <- Hc; apply map_with_len_l⟩
+
+
+def vector_elegamal_reenc {n : ℕ} :  
+  vector F n -> vector (G × G) n ->  
+  vector (G × G) n  
+  | ⟨rs, Hr⟩ ⟨cs, Hc⟩ := 
+    ⟨list.zip_with (elgamal_reenc Gdot Gop g h) rs cs, 
+    begin 
+      have Ht : list.length rs = list.length cs :=  
+      begin rw [Hc, Hr] end,
+      rw <- Hr, apply zip_with_len_l, exact Ht 
+    end⟩
+
+
+def vector_ciphertext_mult {n : ℕ} :  
+  vector (G × G) n -> vector (G × G) n -> 
+  vector (G × G) n  
+  | ⟨cs₁ , Hc₁⟩  ⟨cs₂, Hc₂⟩ := 
+    ⟨list.zip_with (ciphertext_mult Gdot) cs₁  cs₂, 
+    begin 
+      have Ht : list.length cs₁ = list.length cs₂ :=  
+      begin rw [Hc₁, Hc₂] end,
+      rw <- Hc₁, apply zip_with_len_l, exact Ht,
+    end⟩
+
+
 include Hvec Hp
-theorem decryption_correct (r : F) (m : G) :
-  elgamal_dec Gdot Ginv Gop x 
-    (elgamal_enc Gdot Gop g h r m) = m :=
+theorem decryption_correct (r : F) (m : G) (c : G × G):
+  c = elgamal_enc Gdot Gop g h r m -> 
+  elgamal_dec Gdot Ginv Gop x c = m :=
 begin
-  unfold elgamal_enc elgamal_dec, rw Hp,
-  simp, destruct Hvec, intros, clear a, 
-  repeat {rw Hcomp}, destruct Hgroup, 
-  destruct Hfield, intros, clear a_1, 
-  destruct Hcring, intros, clear a a_1, 
-  rw Hinv, destruct Hring, intros, clear a, 
-  destruct Hg, intros, clear a, destruct Hmon_1,
-  intros, clear a, rw <- Hassoc, rw Hinvr,
-  rw Hidr
+  intro Hc, rw [Hc, Hp],  
+  unfold elgamal_enc elgamal_dec,
+  simp, 
+  destruct Hvec, intros, clear a, 
+  repeat {rw Hcomp}, 
+  destruct Hgroup, intros, clear a, 
+  destruct Hfield, intros, clear a, 
+  destruct Hcring, intros, clear a, 
+  rw Hinv, 
+  destruct Hring, intros, clear a, 
+  destruct Hg, intros, clear a, 
+  destruct Hmon_1, intros, clear a, 
+  rw [<- Hassoc, Hinvr, Hidr]
 end
+
+theorem reencryption_decrypt_correct 
+  (r₁ r₂ : F) (m : G) (c₁ c₂ : G × G) :
+  c₁ = elgamal_enc Gdot Gop g h r₁ m    -> 
+  c₂ = elgamal_reenc Gdot Gop g h r₂ c₁ ->
+  elgamal_dec Gdot Ginv Gop x c₂ = m :=
+  begin 
+    intros Hc₁ Hc₂, 
+    rw [Hc₂, Hc₁, Hp],
+    unfold elgamal_dec 
+      elgamal_reenc elgamal_enc,
+    simp, sorry
+  end 
+
+theorem ciphertext_mult_homomorphic 
+  (r₁ r₂ : F) (m₁ m₂ : G) (c₁ c₂ c₃ : G × G) :
+  c₁ = elgamal_enc Gdot Gop g h r₁ m₁ -> 
+  c₂ = elgamal_enc Gdot Gop g h r₂ m₂ ->
+  c₃ = ciphertext_mult Gdot c₁ c₂     -> 
+  elgamal_dec Gdot Ginv Gop x c₃ = Gdot m₁ m₂ :=
+  begin 
+    intros Hc₁ Hc₂ Hc₃,
+    rw [Hc₃, Hc₂, Hc₁, Hp],
+    unfold elgamal_enc
+      ciphertext_mult elgamal_dec, 
+    simp, /- feed to sat solver-/
+    sorry    
+  end 
  
    
 
